@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Meds management</string>
+    <string name="action_settings">Settings</string>
+    <string name="update_string">Update/remove tool</string>
+
+    <string name="add_id">Introduceti id-ul</string>
+    <string name="add_name">Introduceti numele medicamentului</string>
+    <string name="add_dataExp">Introduceti data expirarii</string>
+    <string name="add_bucati">Introduceti numarul de bucati</string>
+    <string name="add_substBaza">Introduceti substanta de baza</string>
+    <string name="add_quantitySubstBaza">Introduceti cantitatea substantei de baza</string>
+    <string name="add_descriere">Introduceti descrierea</string>
+
+    <string name="label_dataexp">Data expirarii: </string>
+    <string name="label_bucati">Bucati: </string>
+    <string name="label_substBaza">Substana de baza: </string>
+    <string name="label_cantitateSubstBaza">Cantitate: </string>
+    <string name="label_descriere">Descriere: </string>
+
+    <string name="button_cancel">Cancel</string>
+    <string name="button_add">Adauga</string>
+    <string name="button_remove">Sterge</string>
+    <string name="button_update">Actualizeaza</string>
+</resources>
