@@ -12,6 +12,12 @@ import com.example.ma_lab2_android.Model.Meds
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.add_dialog.view.*
+import android.content.DialogInterface
+import androidx.core.app.ComponentActivity.ExtraData
+import androidx.core.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+
+
 
 class MainActivity : AppCompatActivity() {
     internal lateinit var db: DBHelper
@@ -39,17 +45,35 @@ class MainActivity : AppCompatActivity() {
             addDialog.button_add.setOnClickListener {
                 alertDialog.dismiss()
 
-                val id = addDialog.add_id.text.toString().toInt()
-                val name = addDialog.add_name.text.toString()
-                val dataExp = addDialog.add_dataExp.text.toString()
-                val bucati = addDialog.add_bucati.text.toString().toInt()
-                val substBaza = addDialog.add_substBaza.text.toString()
-                val cantSubstBaza = addDialog.add_quantitySubstBaza.text.toString()
-                val descriere = addDialog.add_descriere.text.toString()
+                if ((addDialog.add_id.text.isEmpty() or
+                    addDialog.add_name.text.isEmpty()) or
+                    addDialog.add_dataExp.text.isEmpty() or
+                    addDialog.add_bucati.text.isEmpty() or
+                    addDialog.add_substBaza.text.isEmpty() or
+                    addDialog.add_quantitySubstBaza.text.isEmpty() or
+                    addDialog.add_descriere.text.isEmpty())
+                {
+                    AlertDialog.Builder(this)
+                        .setTitle("Warning")
+                        .setMessage("One of the input is empty!")
+                        .setNegativeButton(android.R.string.ok, null)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show()
 
-                val med = Meds(id, name, dataExp, bucati, substBaza, cantSubstBaza, descriere)
-                db.addMed(med)
-                refreshData()
+                } else {
+
+                    val id = addDialog.add_id.text.toString().toInt()
+                    val name = addDialog.add_name.text.toString()
+                    val dataExp = addDialog.add_dataExp.text.toString()
+                    val bucati = addDialog.add_bucati.text.toString().toInt()
+                    val substBaza = addDialog.add_substBaza.text.toString()
+                    val cantSubstBaza = addDialog.add_quantitySubstBaza.text.toString()
+                    val descriere = addDialog.add_descriere.text.toString()
+
+                    val med = Meds(id, name, dataExp, bucati, substBaza, cantSubstBaza, descriere)
+                    db.addMed(med)
+                    refreshData()
+                }
             }
 
             addDialog.button_cancel.setOnClickListener{

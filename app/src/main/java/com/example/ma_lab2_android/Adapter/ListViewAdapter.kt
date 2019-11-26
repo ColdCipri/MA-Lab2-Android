@@ -28,8 +28,7 @@ class ListViewAdapter(internal var activity: Activity,
     }
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val listLayout: View
-        listLayout = inflater.inflate(R.layout.list_layout, null)
+        val listLayout: View = inflater.inflate(R.layout.list_layout, null)
 
         listLayout.id_textview.text = listMeds[position].id.toString()
         listLayout.name_textview.text = listMeds[position].name.toString()

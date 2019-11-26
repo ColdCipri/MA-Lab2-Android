@@ -22,6 +22,7 @@ class DBHelper(context: Context):SQLiteOpenHelper(context, DATABASE_NAME, null, 
         private val COL_QuantityBaseSubst = "Cantitate_subst_baza"
         private val COL_Description = "Descriere"
     }
+
     override fun onCreate(db: SQLiteDatabase?) {
         val CREATE_TABLE_QUERY : String = ("CREATE TABLE $TABLE_NAME ($COL_ID INTEGER PRIMARY KEY,$COL_Name TEXT," +
                 "$COL_DataExpirarii TEXT,$COL_Pieces INTEGER,$COL_BaseSubst TEXT,$COL_QuantityBaseSubst TEXT,$COL_Description TEXT)" )
