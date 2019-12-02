@@ -16,10 +16,18 @@ import android.content.DialogInterface
 import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-
+import android.os.AsyncTask
+import android.widget.Toast
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.net.ServerSocket
+import java.net.Socket
 
 
 class MainActivity : AppCompatActivity() {
+
+    var message: String = ""
     internal lateinit var db: DBHelper
     internal var listMeds:List<Meds> = ArrayList<Meds> ()
 
@@ -130,5 +138,36 @@ class MainActivity : AppCompatActivity() {
         val adapter = ListViewAdapter(this@MainActivity,listMeds,id_edittext, name_edittext, dataExp_edittext, bucati_edittext, substBaza_edittext, cantitateSubstBaza_edittext, descriere_edittext)
         if (adapter.getView() == View.VISIBLE.toString())
             adapter.resetLayout()
+    }
+
+    fun send_text(v : View){
+        message = id_edittext.text.toString()
+        val mt = myTask()
+        mt.execute()
+
+        Toast.makeText(applicationContext,"Data sent", Toast.LENGTH_LONG).show()
+    }
+
+    class myTask : AsyncTask<Void, Void, Void>() {
+        internal lateinit var s: Socket
+        internal lateinit var printWriter: PrintWriter
+        val ip : String = "192.168.1.5"
+
+
+        override fun doInBackground(vararg params: Void?): Void? {
+            try {
+                s = Socket(ip, 5000)
+                printWriter = PrintWriter(s.getOutputStream())
+                printWriter.write(meesage)
+                printWriter.flush()
+                printWriter.close()
+                s.close()
+            }
+            catch (e: Exception) {
+            }
+
+            return null;
+        }
+
     }
 }
