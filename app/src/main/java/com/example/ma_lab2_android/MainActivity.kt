@@ -1,5 +1,6 @@
 package com.example.ma_lab2_android
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +17,11 @@ import android.content.DialogInterface
 import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.AsyncTask
 import android.widget.Toast
+import com.example.ma_lab2_android.Network.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -31,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     internal lateinit var db: DBHelper
     internal var listMeds:List<Meds> = ArrayList<Meds> ()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -38,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         db = DBHelper(this)
 
         refreshData()
+
 
 
         //Add button
@@ -132,6 +138,7 @@ class MainActivity : AppCompatActivity() {
         val adapter = ListViewAdapter(this@MainActivity,listMeds,id_edittext, name_edittext, dataExp_edittext, bucati_edittext, substBaza_edittext, cantitateSubstBaza_edittext, descriere_edittext)
         meds_listview.adapter = adapter
         adapter.resetLayout()
+
     }
 
     override fun onBackPressed() {
@@ -140,34 +147,4 @@ class MainActivity : AppCompatActivity() {
             adapter.resetLayout()
     }
 
-    fun send_text(v : View){
-        message = id_edittext.text.toString()
-        val mt = myTask()
-        mt.execute()
-
-        Toast.makeText(applicationContext,"Data sent", Toast.LENGTH_LONG).show()
-    }
-
-    class myTask : AsyncTask<Void, Void, Void>() {
-        internal lateinit var s: Socket
-        internal lateinit var printWriter: PrintWriter
-        val ip : String = "192.168.1.5"
-
-
-        override fun doInBackground(vararg params: Void?): Void? {
-            try {
-                s = Socket(ip, 5000)
-                printWriter = PrintWriter(s.getOutputStream())
-                printWriter.write(meesage)
-                printWriter.flush()
-                printWriter.close()
-                s.close()
-            }
-            catch (e: Exception) {
-            }
-
-            return null;
-        }
-
-    }
 }

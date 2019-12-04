@@ -1,5 +1,6 @@
 package com.example.ma_lab2_android.Adapter
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.view.LayoutInflater
@@ -27,6 +28,7 @@ class ListViewAdapter(internal var activity: Activity,
         inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
     }
 
+    @SuppressLint("RestrictedApi")
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val listLayout: View = inflater.inflate(R.layout.list_layout, null)
 
@@ -41,6 +43,8 @@ class ListViewAdapter(internal var activity: Activity,
         //Event
         listLayout.setOnClickListener{
             this.activity.updateTool_layout.visibility = View.VISIBLE
+            this.activity.meds_listview.visibility = View.GONE
+            this.activity.fab.visibility = View.GONE
             edit_id.setText(listLayout.id_textview.text.toString())
             edit_name.setText(listLayout.name_textview.text.toString())
             edit_dataExp.setText(listLayout.dataexp_textview.text.toString())
@@ -65,8 +69,11 @@ class ListViewAdapter(internal var activity: Activity,
         return listMeds.size
     }
 
+    @SuppressLint("RestrictedApi")
     fun resetLayout(){
         this.activity.updateTool_layout.visibility = View.GONE
+        this.activity.meds_listview.visibility = View.VISIBLE
+        this.activity.fab.visibility = View.VISIBLE
     }
 
     fun getView():String{
