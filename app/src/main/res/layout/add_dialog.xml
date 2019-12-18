@@ -12,13 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />-->
 
-    <EditText
+    <!--<EditText
         android:id="@+id/add_id"
         android:hint="@string/add_id"
         android:inputType="number"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/layout_bottom"/>
+        android:layout_marginBottom="@dimen/layout_bottom"/>-->
 
     <!--<TextView
         android:text="Nume:"
@@ -33,6 +33,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/layout_bottom"/>
+
+    <!--This need to replace edittext
+    <com.google.android.material.textfield.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/add_name"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="@dimen/layout_bottom" />-->
 
     <!--<TextView
         android:text="Data expirarii:"

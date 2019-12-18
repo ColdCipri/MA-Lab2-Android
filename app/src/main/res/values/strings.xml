@@ -21,4 +21,7 @@
     <string name="button_add">Adauga</string>
     <string name="button_remove">Sterge</string>
     <string name="button_update">Actualizeaza</string>
+
+
+    <string name="refresh">Refresh</string>
 </resources>

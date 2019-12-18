@@ -24,7 +24,7 @@ class NetworkAPIAdapter private constructor() {
 
     companion object {
         val instance: NetworkAPIAdapter by lazy {Holder.INSTANCE}
-        const val BASE_URL: String = "http://localhost:50602/"
+        const val BASE_URL: String = "http://192.168.1.9:5050/"
         private const val URL_ORDERS_ALL: String = "/meds"
         private const val URL_ORDER_INDIVIDUAL: String = "/meds/{id}"
     }

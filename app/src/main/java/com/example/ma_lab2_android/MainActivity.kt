@@ -1,150 +1,126 @@
 package com.example.ma_lab2_android
 
-import android.content.Context
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.ma_lab2_android.Adapter.ListViewAdapter
-import com.example.ma_lab2_android.DBHelper.DBHelper
 import com.example.ma_lab2_android.Model.Meds
 
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
-import kotlinx.android.synthetic.main.add_dialog.view.*
-import android.content.DialogInterface
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
-import android.os.AsyncTask
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.ma_lab2_android.Adapter.MedsAdapter
+import com.example.ma_lab2_android.Dialog.AddDialog
 import com.example.ma_lab2_android.Network.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
-import java.net.ServerSocket
-import java.net.Socket
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import io.realm.Realm
+import io.realm.kotlin.createObject
+import io.realm.kotlin.where
+import org.jetbrains.anko.doAsync
 
 
 class MainActivity : AppCompatActivity() {
 
-    var message: String = ""
-    internal lateinit var db: DBHelper
-    internal var listMeds:List<Meds> = ArrayList<Meds> ()
 
+    private lateinit var realm: Realm
+    private lateinit var adapter: MedsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        db = DBHelper(this)
-
-        refreshData()
-
+        realm = Realm.getDefaultInstance()
 
 
         //Add button
-        fab.setOnClickListener { view ->
-            val addDialog  = LayoutInflater.from(this).inflate(R.layout.add_dialog, null)
+        fab.setOnClickListener {
+            val dialog = AddDialog(this)
+            dialog.show()
+        }
 
-            val builder = AlertDialog.Builder(this)
-                .setView(addDialog)
-                .setTitle("Add item")
 
-            val alertDialog = builder.show()
+        adapter = MedsAdapter(realm, baseContext)
+        meds_recyclerView.layoutManager = LinearLayoutManager(this)
+        meds_recyclerView.adapter = adapter
 
-            addDialog.button_add.setOnClickListener {
-                alertDialog.dismiss()
+    }
 
-                if ((addDialog.add_id.text.isEmpty() or
-                    addDialog.add_name.text.isEmpty()) or
-                    addDialog.add_dataExp.text.isEmpty() or
-                    addDialog.add_bucati.text.isEmpty() or
-                    addDialog.add_substBaza.text.isEmpty() or
-                    addDialog.add_quantitySubstBaza.text.isEmpty() or
-                    addDialog.add_descriere.text.isEmpty())
-                {
-                    AlertDialog.Builder(this)
-                        .setTitle("Warning")
-                        .setMessage("One of the input is empty!")
-                        .setNegativeButton(android.R.string.ok, null)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show()
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.buttons, menu)
+        return true
+    }
 
-                } else {
+    @SuppressLint("CheckResult")
+    fun synchronize() {
+        var realm = Realm.getDefaultInstance()
+        val networkApiAdapter = NetworkAPIAdapter.instance
 
-                    val id = addDialog.add_id.text.toString().toInt()
-                    val name = addDialog.add_name.text.toString()
-                    val dataExp = addDialog.add_dataExp.text.toString()
-                    val bucati = addDialog.add_bucati.text.toString().toInt()
-                    val substBaza = addDialog.add_substBaza.text.toString()
-                    val cantSubstBaza = addDialog.add_quantitySubstBaza.text.toString()
-                    val descriere = addDialog.add_descriere.text.toString()
+        val serverMeds = networkApiAdapter.fetchAll()
+        val localMeds = realm.where<Meds>().findAll()
 
-                    val med = Meds(id, name, dataExp, bucati, substBaza, cantSubstBaza, descriere)
-                    db.addMed(med)
-                    refreshData()
+
+        Log.d("dksandnklads", serverMeds.toString())
+        Log.d("----------------------", localMeds.toString())
+
+        for (localMed in localMeds) {
+            val id = localMed.id
+
+            Log.d("Cwori", localMed.toString())
+            if (id != null) {
+                if (id == 0){
+                    Log.d("Id is 0", id.toString())
+                    networkApiAdapter.insert(localMed)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe( {}, {}, {
+                            Log.d("INSERT FINISHED", "insert succesfull")
+                        })
+                }else {
+                    networkApiAdapter.update(id, localMed)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe( {}, {}, {
+                            Log.d("UPDATE FINISHED", "update succesfull")
+                        })
                 }
             }
+        }
 
-            addDialog.button_cancel.setOnClickListener{
-                alertDialog.dismiss()
+        realm.executeTransaction { realm ->
+            realm.deleteAll()
+        }
+
+        for (serverMed in serverMeds) {
+            realm.executeTransaction { realm ->
+                val med = realm.createObject<Meds>(serverMed.id)
+                med.name = serverMed.name
+                med.dataExp = serverMed.dataExp
+                med.pieces = serverMed.pieces
+                med.baseSubst = serverMed.baseSubst
+                med.quantityBaseSubst = serverMed.quantityBaseSubst
+                med.description = serverMed.description
             }
         }
-
-        //Update button
-        update_button.setOnClickListener{
-            val med = Meds(
-                id_edittext.text.toString().toInt(),
-                name_edittext.text.toString(),
-                dataExp_edittext.text.toString(),
-                bucati_edittext.text.toString().toInt(),
-                substBaza_edittext.text.toString(),
-                cantitateSubstBaza_edittext.text.toString(),
-                descriere_edittext.text.toString()
-            )
-            db.updateMed(med)
-            refreshData()
-        }
-
-        //Delete button
-        remove_button.setOnClickListener{
-            val med = Meds(
-                id_edittext.text.toString().toInt(),
-                name_edittext.text.toString(),
-                dataExp_edittext.text.toString(),
-                bucati_edittext.text.toString().toInt(),
-                substBaza_edittext.text.toString(),
-                cantitateSubstBaza_edittext.text.toString(),
-                descriere_edittext.text.toString()
-            )
-            db.deleteMed(med)
-            refreshData()
-        }
-
-        //cancel
-        cancel_button.setOnClickListener{
-            refreshData()
-        }
-
-
     }
 
-    private fun refreshData() {
-        listMeds = db.allMeds
-        val adapter = ListViewAdapter(this@MainActivity,listMeds,id_edittext, name_edittext, dataExp_edittext, bucati_edittext, substBaza_edittext, cantitateSubstBaza_edittext, descriere_edittext)
-        meds_listview.adapter = adapter
-        adapter.resetLayout()
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.btn_refresh -> {
+            doAsync {
+                synchronize()
+                runOnUiThread {
+                    adapter.notifyDataSetChanged()
+                }
 
+            }
+            Toast.makeText(this.baseContext, "Synchronized", Toast.LENGTH_LONG).show()
+            true
+        }
+        else -> {
+            super.onOptionsItemSelected(item)
+        }
     }
-
-    override fun onBackPressed() {
-        val adapter = ListViewAdapter(this@MainActivity,listMeds,id_edittext, name_edittext, dataExp_edittext, bucati_edittext, substBaza_edittext, cantitateSubstBaza_edittext, descriere_edittext)
-        if (adapter.getView() == View.VISIBLE.toString())
-            adapter.resetLayout()
-    }
-
 }

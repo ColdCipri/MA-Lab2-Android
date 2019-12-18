@@ -1,82 +1,78 @@
 package com.example.ma_lab2_android.Adapter
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.ConnectivityManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.EditText
+
+import android.util.Log
+import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
+import com.example.ma_lab2_android.Dialog.EditDialog
 import com.example.ma_lab2_android.Model.Meds
+import com.example.ma_lab2_android.Network.NetworkAPIAdapter
 import com.example.ma_lab2_android.R
-import kotlinx.android.synthetic.main.activity_main.*
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
+import io.realm.Realm
+import io.realm.kotlin.where
 import kotlinx.android.synthetic.main.list_layout.view.*
 
+class MedsAdapter(var realm: Realm, var context: Context): RecyclerView.Adapter<MedsAdapter.MedsViewHolder>(){
+    class MedsViewHolder(val view: View): RecyclerView.ViewHolder(view)
 
-class ListViewAdapter(internal var activity: Activity,
-                      internal var listMeds:List<Meds>,
-                      internal var edit_id: EditText,
-                      internal var edit_name: EditText,
-                      internal var edit_dataExp: EditText,
-                      internal var edit_bucati: EditText,
-                      internal var edit_baseSubst: EditText,
-                      internal var edit_quantity: EditText,
-                      internal var edit_description: EditText):BaseAdapter() {
-    internal var inflater: LayoutInflater
-    init {
-        inflater = activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedsAdapter.MedsViewHolder{
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.list_layout, parent, false)
+
+        return MedsViewHolder(view)
     }
 
-    @SuppressLint("RestrictedApi")
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val listLayout: View = inflater.inflate(R.layout.list_layout, null)
+    override fun onBindViewHolder(holder: MedsViewHolder, position: Int){
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = cm.activeNetworkInfo
+        val meds = realm.where<Meds>().findAll()
 
-        listLayout.id_textview.text = listMeds[position].id.toString()
-        listLayout.name_textview.text = listMeds[position].name.toString()
-        listLayout.dataexp_textview.text = listMeds[position].dataExp.toString()
-        listLayout.pieces_textview.text = listMeds[position].pieces.toString()
-        listLayout.substBaza_textview.text = listMeds[position].baseSubst.toString()
-        listLayout.quantity_textview.text = listMeds[position].quantityBaseSubst.toString()
-        listLayout.description_textview.text = listMeds[position].description.toString()
+        holder.view.id_textview.text = meds[position]?.id.toString()
+        holder.view.name_textview.text = meds[position]?.name
+        holder.view.dataexp_textview.text = meds[position]?.dataExp
+        holder.view.pieces_textview.text = meds[position]?.pieces.toString()
+        holder.view.substBaza_textview.text = meds[position]?.baseSubst
+        holder.view.quantity_textview.text = meds[position]?.quantityBaseSubst
+        holder.view.description_textview.text = meds[position]?.description
 
-        //Event
-        listLayout.setOnClickListener{
-            this.activity.updateTool_layout.visibility = View.VISIBLE
-            this.activity.meds_listview.visibility = View.GONE
-            this.activity.fab.visibility = View.GONE
-            edit_id.setText(listLayout.id_textview.text.toString())
-            edit_name.setText(listLayout.name_textview.text.toString())
-            edit_dataExp.setText(listLayout.dataexp_textview.text.toString())
-            edit_bucati.setText(listLayout.pieces_textview.text.toString())
-            edit_baseSubst.setText(listLayout.substBaza_textview.text.toString())
-            edit_quantity.setText(listLayout.quantity_textview.text.toString())
-            edit_description.setText(listLayout.description_textview.text.toString())
+        holder.view.update_button.setOnClickListener {
+            val id = meds[position]?.id
+            val intent = Intent(it.context, EditDialog::class.java).apply{
+                putExtra("id", id)
+            }
+
+            it.context.startActivity(intent)
         }
 
-        return listLayout
-    }
+        holder.view.remove_button.setOnClickListener { it ->
+            val id = meds[position]?.id
 
-    override fun getItem(position: Int): Any {
-        return listMeds[position]
-    }
+            if (networkInfo != null && networkInfo.isConnected) {
+                realm.executeTransaction { realm ->
+                    val med = realm.where<Meds>().equalTo("id", id).findFirst()!!
+                    med.deleteFromRealm()
+                }
 
-    override fun getItemId(position: Int): Long {
-        return listMeds[position].id.toLong()
-    }
+                val networkApiAdapter = NetworkAPIAdapter.instance
+                if (id != null) {
+                    networkApiAdapter.delete(id)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe( {}, {}, {
+                            Log.d("DELETE FINISHED", "item deleted")
+                        })
+                }
+            } else
+                Toast.makeText(context, "No internet connection",Toast.LENGTH_SHORT).show()
 
-    override fun getCount(): Int {
-        return listMeds.size
+        }
     }
-
-    @SuppressLint("RestrictedApi")
-    fun resetLayout(){
-        this.activity.updateTool_layout.visibility = View.GONE
-        this.activity.meds_listview.visibility = View.VISIBLE
-        this.activity.fab.visibility = View.VISIBLE
-    }
-
-    fun getView():String{
-        return this.activity.updateTool_layout.visibility.toString()
-    }
+    override fun getItemCount() = realm.where<Meds>().findAll().size
 }
